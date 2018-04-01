@@ -25,36 +25,27 @@ using DiscUtils.Streams;
 
 namespace DiscUtils.Hfs
 {
-    internal sealed class ForkData : IByteArraySerializable
+    internal sealed class CatalogDirInfo : CommonCatalogFileInfo
     {
-        public const int StructSize = 80;
-        public uint ClumpSize;
-        public ExtentDescriptor[] Extents;
+        public ushort Flags;
+        public uint Valence;
 
-        public ulong LogicalSize;
-        public uint TotalBlocks;
-
-        public int Size
+        public override int Size
         {
-            get { return StructSize; }
+            get { throw new NotImplementedException(); }
         }
 
-        public int ReadFrom(byte[] buffer, int offset)
+        public override int ReadFrom(byte[] buffer, int offset)
         {
-            LogicalSize = EndianUtilities.ToUInt64BigEndian(buffer, offset + 0);
-            ClumpSize = EndianUtilities.ToUInt32BigEndian(buffer, offset + 8);
-            TotalBlocks = EndianUtilities.ToUInt32BigEndian(buffer, offset + 12);
+            base.ReadFrom(buffer, offset);
 
-            Extents = new ExtentDescriptor[8];
-            for (int i = 0; i < 8; ++i)
-            {
-                Extents[i] = EndianUtilities.ToStruct<ExtentDescriptor>(buffer, offset + 16 + i * 8);
-            }
+            Flags = EndianUtilities.ToUInt16BigEndian(buffer, offset + 2);
+            Valence = EndianUtilities.ToUInt32BigEndian(buffer, offset + 4);
 
-            return StructSize;
+            return 0;
         }
 
-        public void WriteTo(byte[] buffer, int offset)
+        public override void WriteTo(byte[] buffer, int offset)
         {
             throw new NotImplementedException();
         }

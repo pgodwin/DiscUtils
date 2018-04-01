@@ -1,5 +1,5 @@
 ﻿//
-// Copyright (c) 2008-2011, Kenneth Bell
+// Copyright (c) 2014, Quamotion
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -20,43 +20,27 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-using System;
 using DiscUtils.Streams;
 
 namespace DiscUtils.Hfs
 {
-    internal sealed class ForkData : IByteArraySerializable
+    internal class CompressionResourceBlockHead
     {
-        public const int StructSize = 80;
-        public uint ClumpSize;
-        public ExtentDescriptor[] Extents;
+        public uint DataSize { get; private set; }
 
-        public ulong LogicalSize;
-        public uint TotalBlocks;
+        public uint NumBlocks { get; private set; }
 
-        public int Size
+        public static int Size
         {
-            get { return StructSize; }
+            get { return 8; }
         }
 
         public int ReadFrom(byte[] buffer, int offset)
         {
-            LogicalSize = EndianUtilities.ToUInt64BigEndian(buffer, offset + 0);
-            ClumpSize = EndianUtilities.ToUInt32BigEndian(buffer, offset + 8);
-            TotalBlocks = EndianUtilities.ToUInt32BigEndian(buffer, offset + 12);
+            DataSize = EndianUtilities.ToUInt32BigEndian(buffer, offset);
+            NumBlocks = EndianUtilities.ToUInt32LittleEndian(buffer, offset + 4);
 
-            Extents = new ExtentDescriptor[8];
-            for (int i = 0; i < 8; ++i)
-            {
-                Extents[i] = EndianUtilities.ToStruct<ExtentDescriptor>(buffer, offset + 16 + i * 8);
-            }
-
-            return StructSize;
-        }
-
-        public void WriteTo(byte[] buffer, int offset)
-        {
-            throw new NotImplementedException();
+            return Size;
         }
     }
 }

@@ -25,33 +25,30 @@ using DiscUtils.Streams;
 
 namespace DiscUtils.Hfs
 {
-    internal sealed class ForkData : IByteArraySerializable
+    internal sealed class BTreeNodeDescriptor : IByteArraySerializable
     {
-        public const int StructSize = 80;
-        public uint ClumpSize;
-        public ExtentDescriptor[] Extents;
-
-        public ulong LogicalSize;
-        public uint TotalBlocks;
+        public uint BackwardLink;
+        public uint ForwardLink;
+        public byte Height;
+        public BTreeNodeKind Kind;
+        public ushort NumRecords;
+        public ushort Reserved;
 
         public int Size
         {
-            get { return StructSize; }
+            get { return 14; }
         }
 
         public int ReadFrom(byte[] buffer, int offset)
         {
-            LogicalSize = EndianUtilities.ToUInt64BigEndian(buffer, offset + 0);
-            ClumpSize = EndianUtilities.ToUInt32BigEndian(buffer, offset + 8);
-            TotalBlocks = EndianUtilities.ToUInt32BigEndian(buffer, offset + 12);
+            ForwardLink = EndianUtilities.ToUInt32BigEndian(buffer, offset + 0);
+            BackwardLink = EndianUtilities.ToUInt32BigEndian(buffer, offset + 4);
+            Kind = (BTreeNodeKind)buffer[offset + 8];
+            Height = buffer[offset + 9];
+            NumRecords = EndianUtilities.ToUInt16BigEndian(buffer, offset + 10);
+            Reserved = EndianUtilities.ToUInt16BigEndian(buffer, offset + 12);
 
-            Extents = new ExtentDescriptor[8];
-            for (int i = 0; i < 8; ++i)
-            {
-                Extents[i] = EndianUtilities.ToStruct<ExtentDescriptor>(buffer, offset + 16 + i * 8);
-            }
-
-            return StructSize;
+            return 14;
         }
 
         public void WriteTo(byte[] buffer, int offset)

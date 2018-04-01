@@ -21,40 +21,32 @@
 //
 
 using System;
-using DiscUtils.Streams;
 
 namespace DiscUtils.Hfs
 {
-    internal sealed class ForkData : IByteArraySerializable
+    internal class BTreeGenericRecord : BTreeNodeRecord
     {
-        public const int StructSize = 80;
-        public uint ClumpSize;
-        public ExtentDescriptor[] Extents;
+        private byte[] _data;
+        private readonly int _size;
 
-        public ulong LogicalSize;
-        public uint TotalBlocks;
-
-        public int Size
+        public BTreeGenericRecord(int size)
         {
-            get { return StructSize; }
+            _size = size;
         }
 
-        public int ReadFrom(byte[] buffer, int offset)
+        public override int Size
         {
-            LogicalSize = EndianUtilities.ToUInt64BigEndian(buffer, offset + 0);
-            ClumpSize = EndianUtilities.ToUInt32BigEndian(buffer, offset + 8);
-            TotalBlocks = EndianUtilities.ToUInt32BigEndian(buffer, offset + 12);
-
-            Extents = new ExtentDescriptor[8];
-            for (int i = 0; i < 8; ++i)
-            {
-                Extents[i] = EndianUtilities.ToStruct<ExtentDescriptor>(buffer, offset + 16 + i * 8);
-            }
-
-            return StructSize;
+            get { return _size; }
         }
 
-        public void WriteTo(byte[] buffer, int offset)
+        public override int ReadFrom(byte[] buffer, int offset)
+        {
+            _data = new byte[_size];
+            Array.Copy(buffer, offset, _data, 0, _size);
+            return _size;
+        }
+
+        public override void WriteTo(byte[] buffer, int offset)
         {
             throw new NotImplementedException();
         }

@@ -20,43 +20,14 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-using System;
-using DiscUtils.Streams;
-
 namespace DiscUtils.Hfs
 {
-    internal sealed class ForkData : IByteArraySerializable
+    internal enum CatalogRecordType : short
     {
-        public const int StructSize = 80;
-        public uint ClumpSize;
-        public ExtentDescriptor[] Extents;
-
-        public ulong LogicalSize;
-        public uint TotalBlocks;
-
-        public int Size
-        {
-            get { return StructSize; }
-        }
-
-        public int ReadFrom(byte[] buffer, int offset)
-        {
-            LogicalSize = EndianUtilities.ToUInt64BigEndian(buffer, offset + 0);
-            ClumpSize = EndianUtilities.ToUInt32BigEndian(buffer, offset + 8);
-            TotalBlocks = EndianUtilities.ToUInt32BigEndian(buffer, offset + 12);
-
-            Extents = new ExtentDescriptor[8];
-            for (int i = 0; i < 8; ++i)
-            {
-                Extents[i] = EndianUtilities.ToStruct<ExtentDescriptor>(buffer, offset + 16 + i * 8);
-            }
-
-            return StructSize;
-        }
-
-        public void WriteTo(byte[] buffer, int offset)
-        {
-            throw new NotImplementedException();
-        }
+        None = 0x0000,
+        FolderRecord = 0x0001,
+        FileRecord = 0x0002,
+        FolderThreadRecord = 0x0003,
+        FileThreadRecord = 0x0004
     }
 }

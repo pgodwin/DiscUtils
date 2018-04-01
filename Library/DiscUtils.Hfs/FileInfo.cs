@@ -25,33 +25,26 @@ using DiscUtils.Streams;
 
 namespace DiscUtils.Hfs
 {
-    internal sealed class ForkData : IByteArraySerializable
+    internal class FileInfo : IByteArraySerializable
     {
-        public const int StructSize = 80;
-        public uint ClumpSize;
-        public ExtentDescriptor[] Extents;
-
-        public ulong LogicalSize;
-        public uint TotalBlocks;
+        public uint FileCreator;
+        public uint FileType;
+        public FinderFlags FinderFlags;
+        public Point Point;
 
         public int Size
         {
-            get { return StructSize; }
+            get { return 16; }
         }
 
         public int ReadFrom(byte[] buffer, int offset)
         {
-            LogicalSize = EndianUtilities.ToUInt64BigEndian(buffer, offset + 0);
-            ClumpSize = EndianUtilities.ToUInt32BigEndian(buffer, offset + 8);
-            TotalBlocks = EndianUtilities.ToUInt32BigEndian(buffer, offset + 12);
+            FileType = EndianUtilities.ToUInt32BigEndian(buffer, offset + 0);
+            FileCreator = EndianUtilities.ToUInt32BigEndian(buffer, offset + 4);
+            FinderFlags = (FinderFlags)EndianUtilities.ToUInt16BigEndian(buffer, offset + 8);
+            Point = EndianUtilities.ToStruct<Point>(buffer, offset + 10);
 
-            Extents = new ExtentDescriptor[8];
-            for (int i = 0; i < 8; ++i)
-            {
-                Extents[i] = EndianUtilities.ToStruct<ExtentDescriptor>(buffer, offset + 16 + i * 8);
-            }
-
-            return StructSize;
+            return 16;
         }
 
         public void WriteTo(byte[] buffer, int offset)

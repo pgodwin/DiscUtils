@@ -25,33 +25,22 @@ using DiscUtils.Streams;
 
 namespace DiscUtils.Hfs
 {
-    internal sealed class ForkData : IByteArraySerializable
+    internal sealed class Point : IByteArraySerializable
     {
-        public const int StructSize = 80;
-        public uint ClumpSize;
-        public ExtentDescriptor[] Extents;
-
-        public ulong LogicalSize;
-        public uint TotalBlocks;
+        public short Horizontal;
+        public short Vertical;
 
         public int Size
         {
-            get { return StructSize; }
+            get { return 4; }
         }
 
         public int ReadFrom(byte[] buffer, int offset)
         {
-            LogicalSize = EndianUtilities.ToUInt64BigEndian(buffer, offset + 0);
-            ClumpSize = EndianUtilities.ToUInt32BigEndian(buffer, offset + 8);
-            TotalBlocks = EndianUtilities.ToUInt32BigEndian(buffer, offset + 12);
+            Vertical = EndianUtilities.ToInt16BigEndian(buffer, offset + 0);
+            Horizontal = EndianUtilities.ToInt16BigEndian(buffer, offset + 2);
 
-            Extents = new ExtentDescriptor[8];
-            for (int i = 0; i < 8; ++i)
-            {
-                Extents[i] = EndianUtilities.ToStruct<ExtentDescriptor>(buffer, offset + 16 + i * 8);
-            }
-
-            return StructSize;
+            return 4;
         }
 
         public void WriteTo(byte[] buffer, int offset)

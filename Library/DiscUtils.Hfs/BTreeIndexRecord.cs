@@ -25,38 +25,48 @@ using DiscUtils.Streams;
 
 namespace DiscUtils.Hfs
 {
-    internal sealed class ForkData : IByteArraySerializable
+    internal sealed class BTreeIndexRecord<TKey> : BTreeNodeRecord
+        where TKey : BTreeKey, new()
     {
-        public const int StructSize = 80;
-        public uint ClumpSize;
-        public ExtentDescriptor[] Extents;
+        private readonly int _size;
 
-        public ulong LogicalSize;
-        public uint TotalBlocks;
-
-        public int Size
+        public BTreeIndexRecord(int size)
         {
-            get { return StructSize; }
+            _size = size;
         }
 
-        public int ReadFrom(byte[] buffer, int offset)
-        {
-            LogicalSize = EndianUtilities.ToUInt64BigEndian(buffer, offset + 0);
-            ClumpSize = EndianUtilities.ToUInt32BigEndian(buffer, offset + 8);
-            TotalBlocks = EndianUtilities.ToUInt32BigEndian(buffer, offset + 12);
+        public uint ChildId { get; private set; }
 
-            Extents = new ExtentDescriptor[8];
-            for (int i = 0; i < 8; ++i)
+        public TKey Key { get; private set; }
+
+        public override int Size
+        {
+            get { return _size; }
+        }
+
+        public override int ReadFrom(byte[] buffer, int offset)
+        {
+            Key = new TKey();
+            int keySize = Key.ReadFrom(buffer, offset);
+
+            if ((keySize & 1) != 0)
             {
-                Extents[i] = EndianUtilities.ToStruct<ExtentDescriptor>(buffer, offset + 16 + i * 8);
+                ++keySize;
             }
 
-            return StructSize;
+            ChildId = EndianUtilities.ToUInt32BigEndian(buffer, offset + keySize);
+
+            return _size;
         }
 
-        public void WriteTo(byte[] buffer, int offset)
+        public override void WriteTo(byte[] buffer, int offset)
         {
             throw new NotImplementedException();
+        }
+
+        public override string ToString()
+        {
+            return Key + ":" + ChildId;
         }
     }
 }

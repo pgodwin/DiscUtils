@@ -1,4 +1,4 @@
-﻿//
+//
 // Copyright (c) 2008-2011, Kenneth Bell
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -20,43 +20,27 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-using System;
-using DiscUtils.Streams;
+using System.IO;
+using DiscUtils.Vfs;
 
 namespace DiscUtils.Hfs
 {
-    internal sealed class ForkData : IByteArraySerializable
+    [VfsFileSystemFactory]
+    internal class FileSystemFactory : VfsFileSystemFactory
     {
-        public const int StructSize = 80;
-        public uint ClumpSize;
-        public ExtentDescriptor[] Extents;
-
-        public ulong LogicalSize;
-        public uint TotalBlocks;
-
-        public int Size
+        public override FileSystemInfo[] Detect(Stream stream, VolumeInfo volume)
         {
-            get { return StructSize; }
-        }
-
-        public int ReadFrom(byte[] buffer, int offset)
-        {
-            LogicalSize = EndianUtilities.ToUInt64BigEndian(buffer, offset + 0);
-            ClumpSize = EndianUtilities.ToUInt32BigEndian(buffer, offset + 8);
-            TotalBlocks = EndianUtilities.ToUInt32BigEndian(buffer, offset + 12);
-
-            Extents = new ExtentDescriptor[8];
-            for (int i = 0; i < 8; ++i)
+            if (HfsFileSystem.Detect(stream))
             {
-                Extents[i] = EndianUtilities.ToStruct<ExtentDescriptor>(buffer, offset + 16 + i * 8);
+                return new FileSystemInfo[] { new VfsFileSystemInfo("HFS", "Apple HFS", Open) };
             }
 
-            return StructSize;
+            return new FileSystemInfo[0];
         }
 
-        public void WriteTo(byte[] buffer, int offset)
+        private DiscFileSystem Open(Stream stream, VolumeInfo volumeInfo, FileSystemParameters parameters)
         {
-            throw new NotImplementedException();
+            return new HfsFileSystem(stream);
         }
     }
 }

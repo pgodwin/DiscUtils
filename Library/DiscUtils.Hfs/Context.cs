@@ -27,13 +27,14 @@ namespace DiscUtils.Hfs
 {
     internal sealed class Context : VfsContext
     {
-        public BTree<AttributeKey> Attributes { get; set; }
+        // No attributes in hfs
+        //public BTree<AttributeKey> Attributes { get; set; }
 
         public BTree<CatalogKey> Catalog { get; set; }
 
         public BTree<ExtentKey> ExtentsOverflow { get; set; }
 
-        public VolumeHeader VolumeHeader { get; set; }
+        public MasterDirectoryBlock MasterDirectoryBlock { get; set; }
         public Stream VolumeStream { get; set; }
     }
 }

@@ -35,7 +35,7 @@ namespace DiscUtils.Hfs
         {
             _data = data;
 
-            byte[] headerInfo = StreamUtilities.ReadExact(_data, 0, 114);
+            byte[] headerInfo = StreamUtilities.ReadExact(_data, 0, 106);
 
             _header = new BTreeHeaderRecord();
             _header.ReadFrom(headerInfo, 14);
@@ -64,6 +64,15 @@ namespace DiscUtils.Hfs
         public void VisitRange(BTreeVisitor<TKey> visitor)
         {
             _rootNode.VisitRange(visitor);
+        }
+
+        internal BTreeKeyedNode<TKey> GetKeyedNode(int nodeId)
+        {
+            byte[] nodeData = StreamUtilities.ReadExact(_data, (int)nodeId * _header.NodeSize, _header.NodeSize);
+
+            BTreeKeyedNode<TKey> node = BTreeNode.ReadNode<TKey>(this, nodeData, 0) as BTreeKeyedNode<TKey>;
+            node.ReadFrom(nodeData, 0);
+            return node;
         }
 
         internal BTreeKeyedNode<TKey> GetKeyedNode(uint nodeId)

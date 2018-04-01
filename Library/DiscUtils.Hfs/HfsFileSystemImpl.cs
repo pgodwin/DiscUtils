@@ -33,23 +33,25 @@ namespace DiscUtils.Hfs
             : base(new DiscFileSystemOptions())
         {
             s.Position = 1024;
-
-            byte[] headerBuf = StreamUtilities.ReadExact(s, 512);
-            VolumeHeader hdr = new VolumeHeader();
+            // Master block in HFS is 162 byes
+            byte[] headerBuf = StreamUtilities.ReadExact(s, 162);
+            MasterDirectoryBlock hdr = new MasterDirectoryBlock();
             hdr.ReadFrom(headerBuf, 0);
 
             Context = new Context();
             Context.VolumeStream = s;
-            Context.VolumeHeader = hdr;
+            Context.MasterDirectoryBlock = hdr;
 
+            //FileBuffer catalogBuffer = new FileBuffer(Context, hdr.CatalogFile, CatalogNodeId.CatalogFileId);
             FileBuffer catalogBuffer = new FileBuffer(Context, hdr.CatalogFile, CatalogNodeId.CatalogFileId);
+
             Context.Catalog = new BTree<CatalogKey>(catalogBuffer);
 
             FileBuffer extentsBuffer = new FileBuffer(Context, hdr.ExtentsFile, CatalogNodeId.ExtentsFileId);
             Context.ExtentsOverflow = new BTree<ExtentKey>(extentsBuffer);
 
-            FileBuffer attributesBuffer = new FileBuffer(Context, hdr.AttributesFile, CatalogNodeId.AttributesFileId);
-            Context.Attributes = new BTree<AttributeKey>(attributesBuffer);
+            //FileBuffer attributesBuffer = new FileBuffer(Context, hdr.AttributesFile, CatalogNodeId.AttributesFileId);
+            //Context.Attributes = new BTree<AttributeKey>(attributesBuffer);
 
             // Establish Root directory
             byte[] rootThreadData = Context.Catalog.Find(new CatalogKey(CatalogNodeId.RootFolderId, string.Empty));
@@ -60,7 +62,11 @@ namespace DiscUtils.Hfs
             RootDirectory = (Directory)GetFile(rootDirEntry);
         }
 
-        public override string FriendlyName => "Apple HFS";
+        public override string FriendlyName
+        {
+            get { return "Apple HFS"; }
+        }
+
 
         public override string VolumeLabel
         {
@@ -74,7 +80,10 @@ namespace DiscUtils.Hfs
             }
         }
 
-        public override bool CanWrite => false;
+        public override bool CanWrite
+        {
+            get { return false; }
+        }
 
         public UnixFileSystemInfo GetUnixFileInfo(string path)
         {

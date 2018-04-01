@@ -41,14 +41,16 @@ namespace DiscUtils.Hfs
 
         public int ReadFrom(byte[] buffer, int offset)
         {
-            LogicalSize = EndianUtilities.ToUInt64BigEndian(buffer, offset + 0);
-            ClumpSize = EndianUtilities.ToUInt32BigEndian(buffer, offset + 8);
-            TotalBlocks = EndianUtilities.ToUInt32BigEndian(buffer, offset + 12);
+            //LogicalSize = EndianUtilities.ToUInt64BigEndian(buffer, offset + 0);
+            //ClumpSize = EndianUtilities.ToUInt32BigEndian(buffer, offset + 8);
+            //TotalBlocks = EndianUtilities.ToUInt32BigEndian(buffer, offset + 12);
 
-            Extents = new ExtentDescriptor[8];
-            for (int i = 0; i < 8; ++i)
+            Extents = new ExtentDescriptor[3];
+            int curOff = offset;
+            for (int i = 0; i < 3; ++i)
             {
-                Extents[i] = EndianUtilities.ToStruct<ExtentDescriptor>(buffer, offset + 16 + i * 8);
+                Extents[i] = EndianUtilities.ToStruct<ExtentDescriptor>(buffer, curOff);
+                curOff += Extents[i].Size;
             }
 
             return StructSize;

@@ -58,7 +58,7 @@ namespace DiscUtils.Hfs
             stream.Position = 1024;
 
             byte[] headerBuf = StreamUtilities.ReadExact(stream, 512);
-            VolumeHeader hdr = new VolumeHeader();
+            MasterDirectoryBlock hdr = new MasterDirectoryBlock();
             hdr.ReadFrom(headerBuf, 0);
 
             return hdr.IsValid;

@@ -25,34 +25,29 @@ using DiscUtils.Streams;
 
 namespace DiscUtils.Hfs
 {
-    internal sealed class ExtentDescriptor : IByteArraySerializable
+    internal sealed class ExtentDataRecord : IByteArraySerializable
     {
-        public uint BlockCount;
-        public uint StartBlock;
-
+        public const int StructSize = 12;
+      
+        public ExtentDescriptor[] Extents;
+        
         public int Size
         {
-            get { return 4; }
+            get { return StructSize; }
         }
 
         public int ReadFrom(byte[] buffer, int offset)
         {
-           /*
-            * struct ExtDescriptor
-            * size: 4 bytes
-            * description:
-            *
-            * BP  Size  Type    Identifier   Description
-            * ----------------------------------------------------------
-            * 0   2     UInt16  xdrStABN     first allocation block
-            * 2   2     UInt16  xdrNumABlks  number of allocation blocks
-            */
+          
+            Extents = new ExtentDescriptor[3];
+            int curOff = offset;
+            for (int i = 0; i < 3; ++i)
+            {
+                Extents[i] = EndianUtilities.ToStruct<ExtentDescriptor>(buffer, curOff);
+                curOff += Extents[i].Size;
+            }
 
-
-            StartBlock = EndianUtilities.ToUInt16BigEndian(buffer, offset + 0);
-            BlockCount = EndianUtilities.ToUInt16BigEndian(buffer, offset + 2);
-
-            return 4;
+            return StructSize;
         }
 
         public void WriteTo(byte[] buffer, int offset)

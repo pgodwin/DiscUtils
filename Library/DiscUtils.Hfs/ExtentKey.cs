@@ -35,6 +35,7 @@ namespace DiscUtils.Hfs
 
         public ExtentKey(CatalogNodeId cnid, uint startBlock, bool resource_fork = false)
         {
+           
             _keyLength = 10;
             NodeId = cnid;
             _startBlock = startBlock;
@@ -45,7 +46,7 @@ namespace DiscUtils.Hfs
 
         public override int Size
         {
-            get { return 12; }
+            get { return 8; }
         }
 
         public int CompareTo(ExtentKey other)
@@ -76,10 +77,23 @@ namespace DiscUtils.Hfs
 
         public override int ReadFrom(byte[] buffer, int offset)
         {
-            _keyLength = EndianUtilities.ToUInt16BigEndian(buffer, offset + 0);
-            _forkType = buffer[offset + 2];
+            /*
+            * struct ExtKeyRec
+            * size: 8 bytes
+            * description:
+            *
+            * BP  Size  Type    Identifier  Description
+            * ----------------------------------------------------------------------
+            * 0   1     SInt8   xkrKeyLen   key length (SignedByte)
+            * 1   1     SInt8   xkrFkType   fork type (SignedByte)
+            * 2   4     SInt32  xkrFNum     file number (LongInt)
+            * 6   2     SInt16  xkrFABN     starting file allocation block (Integer)
+            */
+            _keyLength = buffer[offset + 0];
+            _forkType = buffer[offset + 1];
+
             NodeId = new CatalogNodeId(EndianUtilities.ToUInt32BigEndian(buffer, offset + 4));
-            _startBlock = EndianUtilities.ToUInt32BigEndian(buffer, offset + 8);
+            _startBlock = EndianUtilities.ToUInt32BigEndian(buffer, offset + 6);
             return _keyLength + 2;
         }
 

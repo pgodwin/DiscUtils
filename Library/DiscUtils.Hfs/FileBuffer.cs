@@ -31,6 +31,7 @@ namespace DiscUtils.Hfs
     internal sealed class FileBuffer : Buffer
     {
         private readonly ForkData _baseData;
+        //private readonly ExtentDataRecord _baseData;
         private readonly CatalogNodeId _cnid;
         private readonly Context _context;
 
@@ -66,8 +67,8 @@ namespace DiscUtils.Hfs
             {
                 long extentLogicalStart;
                 ExtentDescriptor extent = FindExtent(pos, out extentLogicalStart);
-                long extentStreamStart = extent.StartBlock * (long)_context.VolumeHeader.BlockSize;
-                long extentSize = extent.BlockCount * (long)_context.VolumeHeader.BlockSize;
+                long extentStreamStart = extent.StartBlock * (long)_context.MasterDirectoryBlock.BlockSize;
+                long extentSize = extent.BlockCount * (long)_context.MasterDirectoryBlock.BlockSize;
 
                 long extentOffset = pos + totalRead - extentLogicalStart;
                 int toRead = (int)Math.Min(limitedCount - totalRead, extentSize - extentOffset);
@@ -107,12 +108,12 @@ namespace DiscUtils.Hfs
         private ExtentDescriptor FindExtent(long pos, out long extentLogicalStart)
         {
             uint blocksSeen = 0;
-            uint block = (uint)(pos / _context.VolumeHeader.BlockSize);
+            uint block = (uint)(pos / _context.MasterDirectoryBlock.BlockSize);
             for (int i = 0; i < _baseData.Extents.Length; ++i)
             {
                 if (blocksSeen + _baseData.Extents[i].BlockCount > block)
                 {
-                    extentLogicalStart = blocksSeen * (long)_context.VolumeHeader.BlockSize;
+                    extentLogicalStart = blocksSeen * (long)_context.MasterDirectoryBlock.BlockSize;
                     return _baseData.Extents[i];
                 }
 
@@ -133,7 +134,7 @@ namespace DiscUtils.Hfs
 
                         if (blocksSeen + extentDescriptor.BlockCount > block)
                         {
-                            extentLogicalStart = blocksSeen * (long)_context.VolumeHeader.BlockSize;
+                            extentLogicalStart = blocksSeen * (long)_context.MasterDirectoryBlock.BlockSize;
                             return extentDescriptor;
                         }
 
